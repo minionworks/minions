@@ -1,0 +1,7 @@
+asyncio
+playwright
+openai
+markdownify
+python-dotenv
+langchain-core
+fastapi
