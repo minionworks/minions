@@ -11,6 +11,7 @@ This project is a modular web scraper built using Python, Playwright, and OpenAI
 - [Testing](#testing)
 - [Contributing](#contributing)
 - [License](#license)
+- [Project Structure](#project-structure)
 
 ## Features
 
@@ -69,3 +70,31 @@ Contributions are welcome! Please fork the repository and submit a pull request 
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for more details.
+
+## Project Structure
+
+The project is organized as follows:
+
+```
+minions/
+├── src/
+│   ├── config/
+│   │   └── settings.py       # Configuration settings
+│   ├── services/
+│   │   ├── search.py         # Google search functionality
+│   │   ├── scraper.py        # Web scraping logic
+│   │   └── analyzer.py       # GPT-based analysis
+│   ├── main.py               # Entry point for the application
+│   └── utils/
+│       └── helpers.py        # Utility functions
+├── tests/
+│   ├── test_search.py        # Tests for search module
+│   ├── test_scraper.py       # Tests for scraper module
+│   └── test_analyzer.py      # Tests for analyzer module
+├── .env.example              # Example environment variables
+├── requirements.txt          # Python dependencies
+├── README.md                 # Project documentation
+└── LICENSE                   # License file
+```
+
+This structure ensures modularity and ease of navigation within the project.

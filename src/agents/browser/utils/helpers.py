@@ -1,10 +1,9 @@
-
+import asyncio
 
 async def wait(seconds: int = 3):
     """
     Waits for a given number of seconds.
     """
-    import asyncio
     msg = f'🕒  Waiting for {seconds} seconds'
     print("wait msg:", msg)
     await asyncio.sleep(seconds)

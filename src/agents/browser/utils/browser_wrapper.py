@@ -1,3 +1,4 @@
+
 class BrowserWrapper:
     """
     A simple wrapper to hold the current Playwright page.

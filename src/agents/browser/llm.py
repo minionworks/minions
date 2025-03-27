@@ -1,9 +1,12 @@
+import json
+
 class OpenAIGPT:
     """
     Uses OpenAI's ChatCompletion to analyze function outputs and decide the next action.
     """
     def __init__(self, client):
         self.client = client
+        
 
     async def analyze(self, input_text: str) -> dict:
         messages = [

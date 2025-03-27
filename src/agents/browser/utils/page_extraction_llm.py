@@ -1,8 +1,9 @@
+from openai import AsyncOpenAI
 class OpenAIPageExtractionLLM:
     """
     Uses OpenAI's ChatCompletion to extract content from the page based on a given prompt.
     """
-    async def invoke(self, prompt: str):
+    async def invoke(self, aclient: AsyncOpenAI, prompt: str):
         messages = [
             {
                 "role": "system",
@@ -13,7 +14,7 @@ class OpenAIPageExtractionLLM:
             },
             {"role": "user", "content": prompt}
         ]
-        response = await aclient.chat.completions.create(model="gpt-4o",
+        response = await aclient.chat.completions.create(model="gpt-4o-mini",
         messages=messages,
         temperature=0.0)
         answer = response.choices[0].message['content'].strip()
