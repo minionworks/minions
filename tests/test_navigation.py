@@ -1,20 +1,25 @@
 import pytest
-from playwright.async_api import async_playwright
-from src.utils.browser_wrapper import BrowserWrapper
-from src.services.navigation import go_to_url
+from src.agents.browser.services.navigation import go_to_url, wait_seconds
+
+class DummyPage:
+    async def goto(self, url):
+        self.url = url
+    async def wait_for_load_state(self, state="load"):
+        pass
+
+class DummyBrowser:
+    def __init__(self):
+        self.page = DummyPage()
+    async def get_current_page(self):
+        return self.page
+
+@pytest.mark.asyncio
+async def test_wait_seconds():
+    result = await wait_seconds(1)
+    assert "Waited for 1 seconds" in result
 
 @pytest.mark.asyncio
 async def test_go_to_url():
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        context = await browser.new_context()
-        page = await context.new_page()
-        browser_wrapper = BrowserWrapper(page)
-
-        # Test navigating to a valid URL
-        url = "https://example.com"
-        result = await go_to_url({"url": url}, browser_wrapper)
-        assert "Navigated to" in result
-
-        # Clean up
-        await browser.close()
+    dummy_browser = DummyBrowser()
+    result = await go_to_url("http://example.com", dummy_browser)
+    assert "Navigated to http://example.com" in result

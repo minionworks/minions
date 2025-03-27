@@ -1,22 +1,41 @@
+import logging
 
+logger = logging.getLogger(__name__)
 
-async def search_google(params, browser):
+async def search_google(query: str, browser) -> list:
     """
-    Performs a Google search and extracts the URLs and titles from the search results.
+    Perform a Google search and return the top search results.
     """
     page = await browser.get_current_page()
-    query = params.get("query")
-    url = f'https://www.google.com/search?q={query}&udm=14'
-    await page.goto(url)
+    search_url = f'https://www.google.com/search?q={query}&udm=14'
+    await page.goto(search_url)
     await page.wait_for_load_state()
-    
-    search_results = await page.evaluate('''() => {
+    results = await page.evaluate('''() => {
         return Array.from(document.querySelectorAll('a h3')).map(h => ({
             title: h.innerText,
             url: h.parentElement.href
         })).slice(0, 10);
     }''')
-    
-    msg = f'🔍  Searched for "{query}" in Google'
-    print("search_google msg:", msg)
-    return search_results
+    logger.info(f'Searched for "{query}" on Google. Found {len(results)} results.')
+    return results
+
+async def search_next_page(browser) -> list:
+    """
+    Click the "Next" button on Google search results and return new results.
+    """
+    page = await browser.get_current_page()
+    next_button = await page.query_selector('a#pnnext')
+    if next_button:
+        await next_button.click()
+        await page.wait_for_load_state()
+        new_results = await page.evaluate('''() => {
+            return Array.from(document.querySelectorAll('a h3')).map(h => ({
+                title: h.innerText,
+                url: h.parentElement.href
+            })).slice(0, 10);
+        }''')
+        logger.info("Loaded next page of search results.")
+        return new_results
+    else:
+        logger.info("No next page found.")
+        return []

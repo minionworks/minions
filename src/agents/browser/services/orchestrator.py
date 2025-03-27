@@ -1,33 +1,60 @@
-from src.services.google_search import search_google
-from src.services.navigation import go_to_url
-from src.services.content_extraction import extract_content
+import logging
+from src.agents.browser.services.google_search import search_google, search_next_page
+from src.agents.browser.services.navigation import go_to_url
+from src.agents.browser.services.content_extraction import extract_content
+from src.agents.browser.utils.helpers import save_output
 
-async def ai_web_scraper(user_prompt, browser, page_extraction_llm, gpt_llm):
-    result = await search_google(params={'query': user_prompt}, browser=browser)
-    analysis = await gpt_llm.analyze(result)
+logger = logging.getLogger(__name__)
+
+async def ai_web_scraper(user_prompt: str, browser, page_extraction_llm, gpt_llm) -> str:
+    """
+    Orchestrates the web scraping:
+      1. Perform a Google search.
+      2. Iterate through search result URLs.
+      3. For each URL, navigate and extract content using function calling.
+      4. If extraction returns 'next_url', skip to the next link.
+      5. If 'final', return the answer.
+      6. If all links are exhausted, try the next page or finish.
+    """
+    search_results = await search_google(user_prompt, browser)
+    current_index = 0
 
     while True:
-        action = analysis.get("action")
-        if action == "go_to_url":
-            url = analysis.get("url")
-            if not url:
-                break
-            result = await go_to_url(params={'url': url}, browser=browser)
+        if current_index < len(search_results):
+            current_url = search_results[current_index]["url"]
+            logger.info(f"Processing URL {current_index+1}/{len(search_results)}: {current_url}")
+            try:
+                await go_to_url(current_url, browser)
+            except Exception as e:
+                logger.error(f"Navigation error for {current_url}: {e}. Attempting to go back and skip.")
+                try:
+                    await browser.go_back()
+                except Exception:
+                    pass
+                current_index += 1
+                continue
 
-        elif action == "wait":
-            seconds = analysis.get("seconds", 3)
-            result = await wait(seconds=seconds)
+            try:
+                extraction_result = await extract_content(user_prompt, browser, page_extraction_llm, target_selector="div#main")
+            except Exception as e:
+                logger.error(f"Extraction error for {current_url}: {e}")
+                extraction_result = {"action": "next_url", "summary": "", "key_points": [], "context": "", "output": ""}
 
-        elif action == "extract_content":
-            result = await extract_content(goal=user_prompt, browser=browser, page_extraction_llm=page_extraction_llm)
-
-        elif action == "final":
-            final_output = analysis.get("output", "Final outcome reached")
-            return final_output
+            action_type = extraction_result.get("action", "next_url")
+            if action_type == "final":
+                final_output = extraction_result.get("output", "Final outcome reached")
+                save_output("final_output.txt", final_output)
+                return final_output
+            else:
+                current_index += 1
+                continue
 
         else:
-            break
-
-        analysis = await gpt_llm.analyze(result)
-
-    return "Scraper finished execution without a final outcome."
+            new_results = await search_next_page(browser)
+            if new_results:
+                search_results = new_results
+                current_index = 0
+                continue
+            else:
+                logger.info("No further search results available.")
+                return "Scraper finished execution without a final outcome."

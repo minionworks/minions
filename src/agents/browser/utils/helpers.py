@@ -1,21 +1,14 @@
-import asyncio
+import logging
 
-async def wait(seconds: int = 3):
-    """
-    Waits for a given number of seconds.
-    """
-    msg = f'🕒  Waiting for {seconds} seconds'
-    print("wait msg:", msg)
-    await asyncio.sleep(seconds)
-    return msg
+logger = logging.getLogger(__name__)
 
-def format_prompt(goal: str, content: str) -> str:
+def save_output(filename: str, content: str) -> None:
     """
-    Formats the prompt for the OpenAI API based on the extraction goal and page content.
+    Save content to a file.
     """
-    return (
-        "Your task is to extract the content of the page. You will be given a page "
-        "and a goal and you should extract all relevant information around this goal from the page. "
-        "If the goal is vague, summarize the page. Respond in JSON format. "
-        "Extraction goal: {goal}, Page: {page}"
-    ).format(goal=goal, page=content)
+    try:
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write(content)
+        logger.info(f"Output saved to {filename}")
+    except Exception as e:
+        logger.error(f"Error saving output: {e}")

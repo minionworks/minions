@@ -1,28 +1,38 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock
-from src.services.orchestrator import ai_web_scraper
-from src.utils.browser_wrapper import BrowserWrapper
-from src.utils.openai_gpt import OpenAIGPT
-from src.utils.page_extraction_llm import OpenAIPageExtractionLLM
+from src.agents.browser.services.orchestrator import ai_web_scraper
+
+class DummyPage:
+    async def goto(self, url):
+        self.url = url
+    async def wait_for_load_state(self, state="load"):
+        pass
+    async def evaluate(self, script):
+        return [{"title": "Dummy", "url": "http://dummy.com"}]
+
+class DummyBrowser:
+    def __init__(self):
+        self.page = DummyPage()
+    async def get_current_page(self):
+        return self.page
+    async def query_selector(self, selector):
+        return None
+    async def go_back(self):
+        pass
+
+class DummyExtractionLLM:
+    async def extract_with_function_call(self, page_content_markdown, question):
+        # Always return next_url to simulate going through links.
+        return {"action": "next_url", "output": "", "summary": "", "key_points": [], "context": ""}
+
+class DummyGPT:
+    async def analyze(self, input_text):
+        return {"action": "final", "output": "Final Answer"}
 
 @pytest.mark.asyncio
-async def test_ai_web_scraper(monkeypatch):
-    user_prompt = "What are the latest trends in AI?"
-
-    mock_browser = AsyncMock(spec=BrowserWrapper)
-    mock_page_extraction_llm = AsyncMock(spec=OpenAIPageExtractionLLM)
-    mock_gpt_llm = AsyncMock(spec=OpenAIGPT)
-
-    mock_browser.get_current_page.return_value = MagicMock()
-    mock_gpt_llm.analyze.side_effect = [
-        {"action": "go_to_url", "url": "https://example.com"},
-        {"action": "extract_content"},
-        {"action": "final", "output": "Final summary of AI trends."}
-    ]
-    mock_page_extraction_llm.invoke.return_value.content = '{"summary": "AI is evolving."}'
-
-    final_output = await ai_web_scraper(user_prompt, mock_browser, mock_page_extraction_llm, mock_gpt_llm)
-
-    assert final_output == "Final summary of AI trends."
-    mock_gpt_llm.analyze.assert_called()  # Ensure analyze was called
-    mock_page_extraction_llm.invoke.assert_called()  # Ensure invoke was called
+async def test_ai_web_scraper():
+    dummy_browser = DummyBrowser()
+    dummy_llm = DummyExtractionLLM()
+    dummy_gpt = DummyGPT()
+    result = await ai_web_scraper("Test Question", dummy_browser, dummy_llm, dummy_gpt)
+    # With dummy_llm always returning next_url, orchestrator should finish without a final outcome.
+    assert "Scraper finished execution" in result

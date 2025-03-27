@@ -1,22 +1,33 @@
 import pytest
-from src.services.content_extraction import extract_content
-from src.utils.browser_wrapper import BrowserWrapper
-from unittest.mock import AsyncMock
+from src.agents.browser.services.content_extraction import extract_content
+
+class DummyElement:
+    async def inner_html(self):
+        return "<div>Main Content</div>"
+
+class DummyPage:
+    async def query_selector(self, selector):
+        if selector == "div#main":
+            return DummyElement()
+        return None
+    async def content(self):
+        return "<html>Fallback Content</html>"
+
+class DummyBrowser:
+    def __init__(self):
+        self.page = DummyPage()
+    async def get_current_page(self):
+        return self.page
+
+class DummyExtractionLLM:
+    async def extract_with_function_call(self, page_content_markdown, question):
+        # Simulate extraction returning a final result.
+        return {"action": "final", "output": "Extracted Content", "summary": "", "key_points": [], "context": ""}
 
 @pytest.mark.asyncio
 async def test_extract_content():
-    # Arrange
-    mock_page = AsyncMock()
-    mock_page.content.return_value = "<html><body><h1>Test Title</h1><p>Test content for extraction.</p></body></html>"
-    browser_wrapper = BrowserWrapper(mock_page)
-    mock_llm = AsyncMock()
-    mock_llm.invoke.return_value = AsyncMock(content='{"extracted": "Test content for extraction."}')
-    
-    goal = "Extract main content"
-    
-    # Act
-    result = await extract_content(goal, browser_wrapper, mock_llm)
-    
-    # Assert
-    assert "Extracted from page:" in result
-    assert "Test content for extraction." in result
+    dummy_browser = DummyBrowser()
+    dummy_llm = DummyExtractionLLM()
+    result = await extract_content("Test Question", dummy_browser, dummy_llm, target_selector="div#main")
+    assert result["action"] == "final"
+    assert result["output"] == "Extracted Content"

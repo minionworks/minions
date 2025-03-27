@@ -1,0 +1,9 @@
+# Virtual environment directories
+venv/
+.env
+
+# Logs and temporary files
+*.log
+*.tmp
+
+__pycache__/

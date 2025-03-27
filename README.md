@@ -7,10 +7,10 @@ This project is a modular web scraper built using Python, Playwright, and OpenAI
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Configuration](#configuration)
 - [Testing](#testing)
 - [Contributing](#contributing)
 - [License](#license)
+- [Citation](#Citation)
 - [Project Structure](#project-structure)
 
 ## Features
@@ -20,81 +20,150 @@ This project is a modular web scraper built using Python, Playwright, and OpenAI
 - Uses OpenAI's GPT for analyzing outputs and deciding next actions.
 - Modular structure for easy maintenance and extensibility.
 
+
+---
+
 ## Installation
 
-1. Clone the repository:
-   ```
-   git clone https://github.com/minions/minions.git
+1. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/yourusername/minions.git
    cd minions
    ```
 
-2. Create a virtual environment:
-   ```
+2. **Create and Activate a Virtual Environment:**
+   ```bash
    python -m venv venv
-   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+   # Windows:
+   venv\Scripts\activate
+   # macOS/Linux:
+   source venv/bin/activate
    ```
 
-3. Install the required packages:
-   ```
+3. **Install Dependencies:**
+   ```bash
    pip install -r requirements.txt
    ```
 
-4. Set up environment variables by copying `.env.example` to `.env` and filling in the required values.
+4. **Set Up Environment Variables:**
+   - Copy `.env.example` to `.env` and set your OpenAI API key:
+     ```bash
+     cp .env.example .env
+     ```
+   - Edit the `.env` file:
+     ```
+     OPENAI_API_KEY=your_openai_api_key_here
+     ```
 
 ## Usage
 
-To run the web scraper, execute the following command:
+### Running the Application
+
+Run the main entry point from the project root:
+
+```bash
+cd minions
+python -m src.agents.browser.main
 ```
-python src/main.py
+
+Or, you can run it directly by setting the PYTHONPATH:
+
+```bash
+# From the project root:
+$env:PYTHONPATH = "C:\path\to\minions"  # (PowerShell on Windows)
+python -m src.agents.browser.main
 ```
 
-You can modify the `user_prompt` variable in `src/main.py` to change the query for the web scraper.
+### Example Notebook
 
-## Configuration
-
-Configuration settings, such as API keys, can be found in `src/config/settings.py`. Make sure to update these settings according to your environment.
+An example Jupyter Notebook demonstrating how to run the scraper is available in:
+```
+examples/browser-minion/sample_example.ipynb
+```
+Open the notebook with Jupyter Lab or Notebook:
+```bash
+jupyter notebook examples/browser-minion/sample_example.ipynb
+```
 
 ## Testing
 
-To run the tests, use the following command:
-```
-pytest
+Tests are written using pytest and pytest‑asyncio. To run the tests, simply run:
+
+```bash
+pytest --maxfail=1 --disable-warnings -q
 ```
 
-Make sure you have `pytest` installed in your virtual environment.
+Ensure you are in the project root (where `tests/` is located).
 
 ## Contributing
 
-Contributions are welcome! Please fork the repository and submit a pull request with your changes. Ensure that your code adheres to the project's coding standards and includes appropriate tests.
+Contributions are welcome! Please follow these steps:
+1. Fork the repository.
+2. Create a new branch for your feature or bugfix.
+3. Write tests for your changes.
+4. Open a pull request describing your changes.
 
 ## License
 
-This project is licensed under the MIT License. See the LICENSE file for more details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+
+## Citation
+
+If you use Minion Works in your research or project, please cite:
+
+```bibtex
+@software{minion_works2025,
+  author = {Sairaam,Aman,Cheena},
+  title = {Minion Works: Let AI take the helm of your browser.},
+  year = {2025},
+  publisher = {GitHub},
+  url = {https://github.com/minionworks/minions}
+}
+```
 
 ## Project Structure
-
-The project is organized as follows:
-
 ```
 minions/
+├── .env.example
+├── LICENSE
+├── README.md
+├── requirements.txt
+├── setup.py
+├── test.py
+├── examples/
+│   └── browser-minion/
+│       └── sample_example.ipynb
 ├── src/
+│   ├── __init__.py
 │   ├── config/
-│   │   └── settings.py       # Configuration settings
-│   ├── services/
-│   │   ├── search.py         # Google search functionality
-│   │   ├── scraper.py        # Web scraping logic
-│   │   └── analyzer.py       # GPT-based analysis
-│   ├── main.py               # Entry point for the application
-│   └── utils/
-│       └── helpers.py        # Utility functions
-├── tests/
-│   ├── test_search.py        # Tests for search module
-│   ├── test_scraper.py       # Tests for scraper module
-│   └── test_analyzer.py      # Tests for analyzer module
-├── .env.example              # Example environment variables
-├── requirements.txt          # Python dependencies
-├── README.md                 # Project documentation
-└── LICENSE                   # License file
+│   │   ├── __init__.py
+│   │   └── settings.py
+│   ├── agents/
+│   │   └── api/
+│   │       └── llm.py
+│   ├── browser/
+│   │   ├── __init__.py
+│   │   ├── main.py
+│   │   ├── planner/
+│   │   │   └── openai_gpt.py
+│   │   ├── services/
+│   │   │   ├── __init__.py
+│   │   │   ├── content_extraction.py
+│   │   │   ├── google_search.py
+│   │   │   ├── navigation.py
+│   │   │   └── orchestrator.py
+│   │   └── utils/
+│   │       ├── __init__.py
+│   │       ├── browser_wrapper.py
+│   │       ├── helpers.py
+│   │       └── page_extraction_llm.py
+└── tests/
+    ├── __init__.py
+    ├── test_content_extraction.py
+    ├── test_google_search.py
+    ├── test_navigation.py
+    └── test_orchestrator.py
+    
 ```
 
-This structure ensures modularity and ease of navigation within the project.

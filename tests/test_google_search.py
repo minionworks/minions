@@ -1,27 +1,33 @@
 import pytest
-from src.services.google_search import search_google
-from src.utils.browser_wrapper import BrowserWrapper
+from src.agents.browser.services.google_search import search_google, search_next_page
+
+class DummyPage:
+    async def goto(self, url):
+        self.url = url
+    async def wait_for_load_state(self):
+        pass
+    async def evaluate(self, script):
+        # Simulate returning dummy search results.
+        return [{"title": "Dummy", "url": "http://dummy.com"}]
+
+class DummyBrowser:
+    def __init__(self):
+        self.page = DummyPage()
+    async def get_current_page(self):
+        return self.page
+    async def query_selector(self, selector):
+        return None  # Simulate no next page available.
 
 @pytest.mark.asyncio
-async def test_search_google(mocker):
-    # Mocking the browser and page
-    mock_page = mocker.Mock()
-    mock_browser = BrowserWrapper(mock_page)
+async def test_search_google():
+    browser = DummyBrowser()
+    results = await search_google("test", browser)
+    assert isinstance(results, list)
+    assert results[0]["url"] == "http://dummy.com"
 
-    # Mocking the page.evaluate method to return a predefined result
-    mock_page.evaluate.return_value = [
-        {"title": "Test Title 1", "url": "https://example.com/1"},
-        {"title": "Test Title 2", "url": "https://example.com/2"},
-    ]
-
-    params = {"query": "test query"}
-    
-    # Call the search_google function
-    results = await search_google(params, mock_browser)
-
-    # Assertions to verify the results
-    assert len(results) == 2
-    assert results[0]["title"] == "Test Title 1"
-    assert results[0]["url"] == "https://example.com/1"
-    assert results[1]["title"] == "Test Title 2"
-    assert results[1]["url"] == "https://example.com/2"
+@pytest.mark.asyncio
+async def test_search_next_page():
+    browser = DummyBrowser()
+    results = await search_next_page(browser)
+    # With dummy browser, no next page should be found.
+    assert results == []
