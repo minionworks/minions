@@ -1,128 +1,107 @@
+<!-- Light/Dark Mode Banner Hack -->
+<p align="center">
+  <img src="static/minion-works-cover-light.png#gh-light-mode-only" alt="Minion Works" width="100%" />
+  <img src="static/minion-works-cover-dark.png#gh-dark-mode-only" alt="Minion Works" width="100%" />
+</p>
 
-# Minions
+<h1 align="center"> MinionWorks – Modular browser agents that work for bananas 🍌</h1>
 
-![Minion Works Cover](static/minion-works-cover-light.png)
-
-
-Minions is a modular web Agent built to connect with your browser. It is designed to perform web browsing and completing tasks efficiently by orchestrating various services and utilizing AI for decision-making.
-
-## Table of Contents
-
-- [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Testing](#testing)
-- [Contributing](#contributing)
-- [License](#license)
-- [Citation](#Citation)
-- [Project Structure](#project-structure)
-
-## Features
-
-- Performs Google searches and extracts relevant URLs and titles.
-- Navigates to specified URLs and extracts content.
-- Uses OpenAI's GPT for analyzing outputs and deciding next actions.
-- Modular structure for easy maintenance and extensibility.
+<p align="center">
+  <em>Modular. Extensible. AI-native browser agents for modern web automation.</em>
+</p>
 
 
 ---
 
-## Installation
+## 🚀 Overview
 
-1. **Clone the Repository:**
+Minion Works is a modular AI agent framework that connects to your browser and executes complex tasks autonomously. Built for developers, researchers, and curious builders.
+
+### ✨ Features
+- 🌐 Perform Google searches and scrape content
+- 🤖 Use LLMs (like GPT-4) to plan actions
+- 🔗 Modular architecture for plug-and-play use cases
+- 🔎 DOM interaction & content extraction
+- 🔄 Run workflows via Python or UI
+
+---
+
+## 🛠️ Installation
+
+1. **Clone the repo**
    ```bash
-   git clone https://github.com/yourusername/minions.git
+   git clone https://github.com/minionworks/minions.git
    cd minions
-   ```
 
-2. **Create and Activate a Virtual Environment:**
-   ```bash
-   python -m venv venv
-   # Windows:
-   venv\Scripts\activate
-   # macOS/Linux:
-   source venv/bin/activate
-   ```
+	2.	Create a virtual environment
 
-3. **Install Dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+python -m venv venv
+source venv/bin/activate  # or venv\Scripts\activate on Windows
 
-4. **Set Up Environment Variables:**
-   - Copy `.env.example` to `.env` and set your OpenAI API key:
-     ```bash
-     cp .env.example .env
-     ```
-   - Edit the `.env` file:
-     ```
-     OPENAI_API_KEY=your_openai_api_key_here
-     ```
 
-## Usage
+	3.	Install dependencies
 
-### Running the Application
+pip install -r requirements.txt
 
-Run the main entry point from the project root:
 
-```bash
-cd minions
+	4.	Configure environment
+
+cp .env.example .env
+# Edit your .env file with OpenAI or other API keys
+
+
+
+⸻
+
+🧪 Quick Start
+
 python -m src.agents.browser.main
-```
 
-Or, you can run it directly by setting the PYTHONPATH:
+Or run with PYTHONPATH if you’re outside the root:
 
-```bash
-# From the project root:
-$env:PYTHONPATH = "C:\path\to\minions"  # (PowerShell on Windows)
+$env:PYTHONPATH = "C:\path\to\minions"  # (PowerShell)
 python -m src.agents.browser.main
-```
 
-### Example Notebook
+🧠 Example Use Case
 
-An example Jupyter Notebook demonstrating how to run the scraper is available in:
-```
-examples/browser-minion/sample_example.ipynb
-```
-Open the notebook with Jupyter Lab or Notebook:
-```bash
-jupyter notebook examples/browser-minion/sample_example.ipynb
-```
+agent = BrowserMinion(
+    task="Find the top 3 ML conferences in 2025 and summarize each.",
+    model="gpt-4"
+)
+agent.run()
 
-## Testing
+Or check out this Notebook Example.
 
-Tests are written using pytest and pytest‑asyncio. To run the tests, simply run:
+⸻
 
-```bash
+🧪 Testing
+
 pytest --maxfail=1 --disable-warnings -q
-```
 
-Ensure you are in the project root (where `tests/` is located).
+Ensure you’re in the root folder where tests/ lives.
 
-## Contributing
+⸻
 
-Contributions are welcome! Please follow these steps:
-1. Fork the repository.
-2. Create a new branch for your feature or bugfix.
-3. Write tests for your changes.
-4. Open a pull request describing your changes.
+🤝 Contributing
 
-## License
+We welcome PRs, feedback, and creative ideas!
+	1.	Fork → Branch → Commit
+	2.	Add tests
+	3.	Submit a Pull Request
+	4.	Tell your friends 🚀
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+⸻
 
+📖 Citation
 
-## Citation
-
-If you use Minion Works in your research or project, please cite:
-
-```bibtex
 @software{minion_works2025,
-  author = {Sairaam,Aman,Cheena},
+  author = {Sairaam, Aman, Cheena},
   title = {Minion Works: Let AI take the helm of your browser.},
   year = {2025},
   publisher = {GitHub},
   url = {https://github.com/minionworks/minions}
 }
-```
 
+
+
+⸻
