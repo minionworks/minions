@@ -1,6 +1,10 @@
+
 # Minions
 
-This project is a modular web scraper built using Python, Playwright, and OpenAI's GPT. It is designed to perform web scraping tasks efficiently by orchestrating various services and utilizing AI for decision-making.
+![Minion Works Cover](static/minion-works-cover-light.png)
+
+
+Minions is a modular web Agent built to connect with your browser. It is designed to perform web browsing and completing tasks efficiently by orchestrating various services and utilizing AI for decision-making.
 
 ## Table of Contents
 
@@ -120,50 +124,5 @@ If you use Minion Works in your research or project, please cite:
   publisher = {GitHub},
   url = {https://github.com/minionworks/minions}
 }
-```
-
-## Project Structure
-```
-minions/
-├── .env.example
-├── LICENSE
-├── README.md
-├── requirements.txt
-├── setup.py
-├── test.py
-├── examples/
-│   └── browser-minion/
-│       └── sample_example.ipynb
-├── src/
-│   ├── __init__.py
-│   ├── config/
-│   │   ├── __init__.py
-│   │   └── settings.py
-│   ├── agents/
-│   │   └── api/
-│   │       └── llm.py
-│   ├── browser/
-│   │   ├── __init__.py
-│   │   ├── main.py
-│   │   ├── planner/
-│   │   │   └── openai_gpt.py
-│   │   ├── services/
-│   │   │   ├── __init__.py
-│   │   │   ├── content_extraction.py
-│   │   │   ├── google_search.py
-│   │   │   ├── navigation.py
-│   │   │   └── orchestrator.py
-│   │   └── utils/
-│   │       ├── __init__.py
-│   │       ├── browser_wrapper.py
-│   │       ├── helpers.py
-│   │       └── page_extraction_llm.py
-└── tests/
-    ├── __init__.py
-    ├── test_content_extraction.py
-    ├── test_google_search.py
-    ├── test_navigation.py
-    └── test_orchestrator.py
-    
 ```
 
