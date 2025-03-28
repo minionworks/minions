@@ -1,6 +1,34 @@
 import logging
+from openai import AsyncOpenAI
+from src.config.settings import OPENAI_API_KEY
+
+aclient = AsyncOpenAI(api_key=OPENAI_API_KEY)
 
 logger = logging.getLogger(__name__)
+
+async def refine_search_query(original_query: str) -> str:
+    """
+    Uses GPT to refine the raw user query into an optimized search query for Google.
+    Returns the refined query as plain text.
+    """
+    system_message = {
+    "role": "system",
+    "content": (
+        "You are an expert search query refiner. Your job is to transform a user's raw question into a concise and targeted search query that will yield highly relevant results on Google. "
+        "If the input includes any output format instructions (like JSON, CSV, etc.), ignore them. "
+        "Return only the refined search query in plain text with no additional commentary."
+    )
+}
+    user_message = {
+        "role": "user",
+        "content": f"Original query: {original_query}"
+    }
+    response =await aclient.chat.completions.create(model="gpt-4o",
+         messages=[system_message, user_message],
+        temperature=0.0)
+    refined_query = response.choices[0].message.content.strip()
+    logger.info(f"Refined search query: {refined_query}")
+    return refined_query
 
 async def search_google(query: str, browser) -> list:
     """

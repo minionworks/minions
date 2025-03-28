@@ -10,7 +10,6 @@
   <em>Modular. Extensible. AI-native browser agents for modern web automation.</em>
 </p>
 
-
 ---
 
 ## 🚀 Overview
@@ -32,68 +31,79 @@ Minion Works is a modular AI agent framework that connects to your browser and e
    ```bash
    git clone https://github.com/minionworks/minions.git
    cd minions
+   ```
 
-	2.	Create a virtual environment
+2. **Create a virtual environment**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # or venv\Scripts\activate on Windows
+   ```
 
-python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
+4. **Configure environment**
+   ```bash
+   cp .env.example .env
+   # Edit your .env file with OpenAI or other API keys
+   ```
 
-	3.	Install dependencies
+---
 
-pip install -r requirements.txt
+## 🧪 Quick Start
 
-
-	4.	Configure environment
-
-cp .env.example .env
-# Edit your .env file with OpenAI or other API keys
-
-
-
-⸻
-
-🧪 Quick Start
-
+```bash
 python -m src.agents.browser.main
+```
 
 Or run with PYTHONPATH if you’re outside the root:
 
-$env:PYTHONPATH = "C:\path\to\minions"  # (PowerShell)
+```powershell
+$env:PYTHONPATH = "C:\path\to\minions"
 python -m src.agents.browser.main
+```
 
-🧠 Example Use Case
+---
 
+## 🧠 Example Use Case
+
+```python
 agent = BrowserMinion(
     task="Find the top 3 ML conferences in 2025 and summarize each.",
     model="gpt-4"
 )
 agent.run()
+```
 
 Or check out this Notebook Example.
 
-⸻
+---
 
-🧪 Testing
+## 🧪 Testing
 
+```bash
 pytest --maxfail=1 --disable-warnings -q
+```
 
-Ensure you’re in the root folder where tests/ lives.
+Ensure you’re in the root folder where `tests/` lives.
 
-⸻
+---
 
-🤝 Contributing
+## 🤝 Contributing
 
 We welcome PRs, feedback, and creative ideas!
-	1.	Fork → Branch → Commit
-	2.	Add tests
-	3.	Submit a Pull Request
-	4.	Tell your friends 🚀
+1. Fork → Branch → Commit
+2. Add tests
+3. Submit a Pull Request
+4. Tell your friends 🚀
 
-⸻
+---
 
-📖 Citation
+## 📖 Citation
 
+```bibtex
 @software{minion_works2025,
   author = {Sairaam, Aman, Cheena},
   title = {Minion Works: Let AI take the helm of your browser.},
@@ -101,7 +111,6 @@ We welcome PRs, feedback, and creative ideas!
   publisher = {GitHub},
   url = {https://github.com/minionworks/minions}
 }
+```
 
-
-
-⸻
+---

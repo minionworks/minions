@@ -1,5 +1,5 @@
 import logging
-from src.agents.browser.services.google_search import search_google, search_next_page
+from src.agents.browser.services.google_search import search_google, search_next_page,refine_search_query
 from src.agents.browser.services.navigation import go_to_url
 from src.agents.browser.services.content_extraction import extract_content
 from src.agents.browser.utils.helpers import save_output
@@ -16,7 +16,8 @@ async def ai_web_scraper(user_prompt: str, browser, page_extraction_llm, gpt_llm
       5. If 'final', return the answer.
       6. If all links are exhausted, try the next page or finish.
     """
-    search_results = await search_google(user_prompt, browser)
+    refined_query = await refine_search_query(user_prompt)
+    search_results = await search_google(refined_query, browser)
     current_index = 0
 
     while True:
