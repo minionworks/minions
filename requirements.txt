@@ -4,4 +4,3 @@ openai
 markdownify
 python-dotenv
 langchain-core
-fastapi
