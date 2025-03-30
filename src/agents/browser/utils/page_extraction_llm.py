@@ -1,10 +1,9 @@
 import json
 import logging
 import markdownify
-from openai import AsyncOpenAI
-
-from src.config.settings import OPENAI_API_KEY
-aclient = AsyncOpenAI(api_key=OPENAI_API_KEY)
+from typing import Dict, Any
+from langchain_core.language_models.base import BaseLanguageModel
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
 logger = logging.getLogger(__name__)
 
@@ -48,42 +47,76 @@ extraction_function = {
 
 class OpenAIPageExtractionLLM:
     """
-    Uses OpenAI's ChatCompletion with function calling to extract 
-    content from the page in a guaranteed JSON format.
+    A class that uses OpenAI's function calling to extract and analyze content from web pages.
+    
+    This class takes a language model instance and provides methods to analyze page content
+    and determine if it contains the answer to a given question.
     """
-    async def extract_with_function_call(self, page_content_markdown: str, question: str) -> dict:
-        system_message = {
-            "role": "system",
-            "content": (
+
+    def __init__(self, llm: BaseLanguageModel):
+        """
+        Initialize the extraction LLM.
+        
+        Args:
+            llm: A language model instance that supports function calling
+        """
+        self.llm = llm
+
+    async def extract_with_function_call(self, page_content_markdown: str, question: str) -> Dict[str, Any]:
+        """
+        Analyze page content to determine if it answers the given question.
+        
+        Args:
+            page_content_markdown: The page content in markdown format
+            question: The question to check if the page answers
+            
+        Returns:
+            Dict containing the analysis result with keys:
+            - action: Either 'final' or 'next_url'
+            - summary: Detailed answer if found
+            - key_points: List of important points
+            - context: Additional context
+            - output: Final formatted output
+        """
+        messages = [
+            SystemMessage(content=(
                 "You are a specialized page extraction assistant. "
                 "Analyze the provided page content to see if it answers the user's question. "
                 "If yes, call the function 'extract_content_result' with action='final', summary, key_points, context, and output. "
                 "If not, call the function 'extract_content_result' with action='next_url'. "
                 "Do not return anything else."
-            )
-        }
-        user_message = {
-            "role": "user",
-            "content": f"Question: {question}\nPage content:\n{page_content_markdown}"
-        }
-        response = await aclient.chat.completions.create(model="gpt-4o",
-        messages=[system_message, user_message],
-        functions=[extraction_function],
-        function_call="auto",
-        temperature=0.0)
-        choice = response.choices[0]
-        finish_reason = choice.finish_reason
+            )),
+            HumanMessage(content=f"Question: {question}\nPage content:\n{page_content_markdown}")
+        ]
 
-        if finish_reason == "function_call":
-            function_name = choice.message.function_call.name
-            arguments_str = choice.message.function_call.arguments
-            try:
-                arguments = json.loads(arguments_str)
-                logger.info(f"Function '{function_name}' called with arguments: {arguments}")
-                return arguments
-            except json.JSONDecodeError as e:
-                logger.error(f"Error parsing function call arguments: {arguments_str}")
-                return {"action": "next_url", "summary": "", "key_points": [], "context": "", "output": ""}
-        else:
-            logger.warning("Model did not call the function. Returning next_url.")
-            return {"action": "next_url", "summary": "", "key_points": [], "context": "", "output": ""}
+        try:
+            response = await self.llm.ainvoke(input=messages,functions=[extraction_function])
+
+            if isinstance(response, AIMessage) and hasattr(response, 'additional_kwargs'):
+                function_call = response.additional_kwargs.get('function_call')
+                if function_call:
+                    arguments_str = function_call.get("arguments", "{}")
+                    try:
+                        arguments = json.loads(arguments_str)
+                        logger.info(f"Function '{function_call['name']}' called with arguments: {arguments}")
+                        return arguments
+                    except json.JSONDecodeError as e:
+                        logger.error(f"Error parsing function call arguments: {e}")
+                        return self._get_fallback_response()
+            
+            logger.warning("Model did not call a function. Returning fallback.")
+            return self._get_fallback_response()
+            
+        except Exception as e:
+            logger.error(f"Error during content extraction: {e}")
+            return self._get_fallback_response()
+
+    def _get_fallback_response(self) -> Dict[str, Any]:
+        """Return a fallback response when extraction fails."""
+        return {
+            "action": "next_url",
+            "summary": "",
+            "key_points": [],
+            "context": "",
+            "output": ""
+        }

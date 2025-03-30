@@ -1,9 +1,11 @@
 # Virtual environment directories
 venv/
 .env
+dist/
 
 # Logs and temporary files
 *.log
 *.tmp
 
 __pycache__/
+

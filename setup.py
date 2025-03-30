@@ -23,6 +23,8 @@ setup(
         "openai",
         "markdownify",
         "python-dotenv",
-        "langchain-core"
+        "langchain-core",
+        "langchain-core",
+        "langchain-openai"
     ],
 )
