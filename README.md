@@ -17,34 +17,22 @@
 Minion Works is a modular AI agent framework that connects to your browser and executes complex tasks autonomously. Built for developers, researchers, and curious builders.
 
 ### ✨ Features
-- 🌐 Perform Google searches and scrape content
-- 🤖 Use LLMs (like GPT-4) to plan actions
-- 🔗 Modular architecture for plug-and-play use cases
-- 🔎 DOM interaction & content extraction
-- 🔄 Run workflows via Python or UI
+- 🌐 Perform Google searches and scrape content  
+- 🤖 Use LLMs (like GPT-4) to plan actions  
+- 🔗 Modular architecture for plug-and-play use cases  
+- 🔎 DOM interaction & content extraction  
+- 🔄 Run workflows via Python or UI  
 
 ---
 
 ## 🛠️ Installation
 
-1. **Clone the repo**
+1. **Install the package**
    ```bash
-   git clone https://github.com/minionworks/minions.git
-   cd minions
+   pip install minion-agent
    ```
 
-2. **Create a virtual environment**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # or venv\Scripts\activate on Windows
-   ```
-
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Configure environment**
+2. **Set up environment variables**
    ```bash
    cp .env.example .env
    # Edit your .env file with OpenAI or other API keys
@@ -54,15 +42,38 @@ Minion Works is a modular AI agent framework that connects to your browser and e
 
 ## 🧪 Quick Start
 
-```bash
-python -m src.minion_agent.browser.main
-```
+Here’s a complete example using `MinionAgent` with `langchain-openai`:
 
-Or run with PYTHONPATH if you’re outside the root:
+```python
+from langchain_openai import ChatOpenAI
+from src.minion_agent.browser.main import MinionAgent
+import asyncio
+from dotenv import load_dotenv
 
-```powershell
-$env:PYTHONPATH = "C:\path\to\minions"
-python -m src.minion_agent.browser.main
+# Load environment variables from .env file
+load_dotenv()
+
+async def main():
+    # Example 1: Using environment variables for OpenAI configuration
+    agent1 = MinionAgent(
+        task="Compare the price of GPT-4 and DeepSeek-V3",
+        llm=ChatOpenAI(model="gpt-4o"),
+        headless=True
+    )
+    result1 = await agent1.run()
+    print("Result 1:", result1)
+
+    # Example 2: Providing custom LLM and configuration
+    agent2 = MinionAgent(
+        task="Search for the latest news about AI",
+        llm=ChatOpenAI(model="gpt-4o"),
+        headless=False  # Show browser window
+    )
+    result2 = await agent2.run()
+    print("Result 2:", result2)
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 ---
@@ -70,14 +81,12 @@ python -m src.minion_agent.browser.main
 ## 🧠 Example Use Case
 
 ```python
-agent = BrowserMinion(
+agent = MinionAgent(
     task="Find the top 3 ML conferences in 2025 and summarize each.",
-    model="gpt-4"
+    llm=ChatOpenAI(model="gpt-4")
 )
-agent.run()
+await agent.run()
 ```
-
-Or check out this Notebook Example.
 
 ---
 
@@ -93,11 +102,11 @@ Ensure you’re in the root folder where `tests/` lives.
 
 ## 🤝 Contributing
 
-We welcome PRs, feedback, and creative ideas!
-1. Fork → Branch → Commit
-2. Add tests
-3. Submit a Pull Request
-4. Tell your friends 🚀
+We welcome PRs, feedback, and creative ideas!  
+1. Fork → Branch → Commit  
+2. Add tests  
+3. Submit a Pull Request  
+4. Tell your friends 🚀  
 
 ---
 
@@ -112,5 +121,3 @@ We welcome PRs, feedback, and creative ideas!
   url = {https://github.com/minionworks/minions}
 }
 ```
-
----
