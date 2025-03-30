@@ -1,0 +1,73 @@
+Here is the list of Y Combinator backed companies for 2024:
+
+1. Stripe
+2. Brex
+3. Faire
+4. Deel
+5. Rippling
+6. Scale AI
+7. Flexport
+8. Modern Treasury
+9. Vanta
+10. Pave
+11. Papa
+12. Zepto
+13. Nowports
+14. Modern Health
+15. Alloy Automation
+16. Replit
+17. Athelas
+18. Doppler
+19. Ironclad
+20. Mutiny
+21. Salt Security
+22. Zapier
+23. Kalshi
+24. JITX
+25. Cortex
+26. OpenSea
+27. Gusto
+28. Benchling
+29. Fivetran
+30. Meesho
+31. Monzo
+32. Relativity Space
+33. Webflow
+34. MessageBird
+35. Whatnot
+36. GOAT
+37. Snackpass
+38. Arketa
+39. Remora
+40. Ajaib
+41. Alude
+42. Vouch Insurance
+43. Pachama
+44. Living Carbon
+45. Xendit
+46. Buildspace
+47. ShipBob
+48. Nabla Bio
+49. PostEra
+50. Metaplane
+51. Boom Supersonic
+52. Eight Sleep
+53. Tank Payments
+54. Disclo
+55. Flock Safety
+56. zingbus
+57. Easol
+58. Atmos
+59. MindsDB
+60. Ambient Ai
+61. Roboflow
+62. Compound
+63. Karat Financial
+64. Dagger
+65. Hightouch
+66. Replicate
+67. Supabase
+68. Deepgram
+69. Pulley
+
+These startups cover a broad spectrum of industries including fintech, logistics, healthcare, artificial intelligence, and many others.

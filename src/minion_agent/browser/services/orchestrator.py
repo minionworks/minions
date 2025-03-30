@@ -1,8 +1,8 @@
 import logging
-from src.agents.browser.services.google_search import search_google, search_next_page, refine_search_query
-from src.agents.browser.services.navigation import go_to_url
-from src.agents.browser.services.content_extraction import extract_content
-from src.agents.browser.utils.helpers import save_output
+from minion_agent.browser.services.google_search import search_google, search_next_page, refine_search_query
+from minion_agent.browser.services.navigation import go_to_url
+from minion_agent.browser.services.content_extraction import extract_content
+from minion_agent.browser.utils.helpers import save_output
 
 logger = logging.getLogger(__name__)
 

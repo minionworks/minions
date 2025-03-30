@@ -1,5 +1,5 @@
 import pytest
-from src.agents.browser.services.orchestrator import ai_web_scraper
+from src.minion_agent.browser.services.orchestrator import ai_web_scraper
 
 class DummyPage:
     async def goto(self, url):

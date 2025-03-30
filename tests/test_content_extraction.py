@@ -1,5 +1,5 @@
 import pytest
-from src.agents.browser.services.content_extraction import extract_content
+from src.minion_agent.browser.services.content_extraction import extract_content
 
 class DummyElement:
     async def inner_html(self):

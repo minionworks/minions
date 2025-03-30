@@ -1,15 +1,16 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='minion-works', 
-    version='0.0.1',
+    name='minion-agent', 
+    version='0.0.2',
     author='Aman, Cheena, Sai',
     author_email='sai@cobuild.tech',
     description='Agents for menial tasks',
     long_description=open('README.md', encoding='utf-8').read(),
     long_description_content_type='text/markdown',
     url='https://github.com/minionworks/minions',
-    packages=find_packages(),
+    package_dir={'': 'src'},
+    packages=find_packages(where='src'),
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
@@ -23,7 +24,6 @@ setup(
         "openai",
         "markdownify",
         "python-dotenv",
-        "langchain-core",
         "langchain-core",
         "langchain-openai"
     ],

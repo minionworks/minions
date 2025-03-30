@@ -5,10 +5,9 @@ from typing import Optional, Union
 from playwright.async_api import async_playwright
 from langchain_openai import ChatOpenAI
 from langchain_core.language_models.base import BaseLanguageModel
-from src.agents.browser.utils.browser_wrapper import BrowserWrapper
-from src.agents.browser.utils.page_extraction_llm import OpenAIPageExtractionLLM
-from src.agents.browser.services.orchestrator import ai_web_scraper
-from src.agents.browser.planner.openai_gpt import OpenAIGPT
+from .utils.browser_wrapper import BrowserWrapper
+from .utils.page_extraction_llm import OpenAIPageExtractionLLM
+from .services.orchestrator import ai_web_scraper
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -75,27 +74,27 @@ class MinionAgent:
             await browser_instance.close()
             return result
 
-def main():
-    parser = argparse.ArgumentParser(description='Minion Works - AI-powered web automation')
-    parser.add_argument('task', help='The task or prompt to execute')
-    parser.add_argument('--debug', action='store_true', help='Enable debug logging')
-    parser.add_argument('--show-browser', action='store_true', help='Show browser window (headless mode)')
-    args = parser.parse_args()
+# def main():
+#     parser = argparse.ArgumentParser(description='Minion Works - AI-powered web automation')
+#     parser.add_argument('task', help='The task or prompt to execute')
+#     parser.add_argument('--debug', action='store_true', help='Enable debug logging')
+#     parser.add_argument('--show-browser', action='store_true', help='Show browser window (headless mode)')
+#     args = parser.parse_args()
 
-    if args.debug:
-        logging.getLogger().setLevel(logging.DEBUG)
+#     if args.debug:
+#         logging.getLogger().setLevel(logging.DEBUG)
 
-    # Create LLM instance
-    llm = ChatOpenAI(model="gpt-4o")
+#     # Create LLM instance
+#     llm = ChatOpenAI(model="gpt-4o")
     
-    agent = MinionAgent(
-        task=args.task,
-        llm=llm,
-        headless=True
-    )
-    result = asyncio.run(agent.run())
-    print(result)
+#     agent = MinionAgent(
+#         task=args.task,
+#         llm=llm,
+#         headless=True
+#     )
+#     result = asyncio.run(agent.run())
+#     print(result)
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()
 

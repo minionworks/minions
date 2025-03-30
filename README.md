@@ -55,14 +55,14 @@ Minion Works is a modular AI agent framework that connects to your browser and e
 ## 🧪 Quick Start
 
 ```bash
-python -m src.agents.browser.main
+python -m src.minion_agent.browser.main
 ```
 
 Or run with PYTHONPATH if you’re outside the root:
 
 ```powershell
 $env:PYTHONPATH = "C:\path\to\minions"
-python -m src.agents.browser.main
+python -m src.minion_agent.browser.main
 ```
 
 ---

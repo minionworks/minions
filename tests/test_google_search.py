@@ -1,5 +1,5 @@
 import pytest
-from src.agents.browser.services.google_search import search_google, search_next_page
+from src.minion_agent.browser.services.google_search import search_google, search_next_page
 
 class DummyPage:
     async def goto(self, url):

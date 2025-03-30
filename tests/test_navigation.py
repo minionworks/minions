@@ -1,5 +1,5 @@
 import pytest
-from src.agents.browser.services.navigation import go_to_url, wait_seconds
+from src.minion_agent.browser.services.navigation import go_to_url, wait_seconds
 
 class DummyPage:
     async def goto(self, url):

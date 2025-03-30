@@ -1,5 +1,5 @@
 from langchain_openai import ChatOpenAI
-from src.agents.browser.main import MinionAgent
+from src.minion_agent.browser.main import MinionAgent
 import asyncio
 from dotenv import load_dotenv
 
