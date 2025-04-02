@@ -8,6 +8,8 @@ from langchain_core.language_models.base import BaseLanguageModel
 from .utils.browser_wrapper import BrowserWrapper
 from .utils.page_extraction_llm import OpenAIPageExtractionLLM
 from .services.orchestrator import ai_web_scraper
+from .utils.mcp_planner import MCPPlanner
+
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -35,6 +37,7 @@ class MinionAgent:
         if llm is None:
             raise ValueError("LLM instance must be provided")
         self.llm = llm
+        self.result = None
 
     async def run(self):
         """
@@ -64,15 +67,32 @@ class MinionAgent:
             context = await browser_instance.new_context()
             page = await context.new_page()
             browser_wrapper = BrowserWrapper(page)
+            mcp_planner = MCPPlanner(self.llm)
 
             # Instantiate the extraction LLM (for function calling)
             extraction_llm = OpenAIPageExtractionLLM(llm=self.llm)
+            try:
+                # Run the orchestrator with MCP planner
+                self.result = await ai_web_scraper(
+                    self.task,
+                    browser_wrapper,
+                    extraction_llm,
+                    self.llm,
+                    mcp_planner
+                )
+            except Exception as e:
+                logger.error(f"Error in web scraper: {e}")
+                self.result = f"An error occurred during web scraping: {str(e)}"
+            finally:
+                await context.close()
+                await browser_instance.close()
+        
+        return self.result
 
-            # Use the provided planning LLM (self.llm) for decision making.
-            result = await ai_web_scraper(self.task, browser_wrapper, extraction_llm, self.llm)
-            logger.info("Final output: " + result)
-            await browser_instance.close()
-            return result
+            # result = await ai_web_scraper(self.task, browser_wrapper, extraction_llm, self.llm)
+            # logger.info("Final output: " + result)
+            # await browser_instance.close()
+            # return result
 
 # def main():
 #     parser = argparse.ArgumentParser(description='Minion Works - AI-powered web automation')

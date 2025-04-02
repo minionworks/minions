@@ -1,122 +1,203 @@
-import json
 import logging
-import markdownify
-from typing import Dict, Any
+import json
+from typing import Dict, Any, List
 from langchain_core.language_models.base import BaseLanguageModel
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
 logger = logging.getLogger(__name__)
 
-# Function calling schema for extraction
-extraction_function = {
-    "name": "extract_content_result",
-    "description": (
-        "Analyze the page content to see if it answers the question. "
-        "If yes, return action='final' with a summary, key_points, context, and output. "
-        "If not, return action='next_url'."
-    ),
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "action": {
-                "type": "string",
-                "enum": ["final", "next_url"],
-                "description": "If 'final', the page answers the question. If 'next_url', it does not."
-            },
-            "summary": {
-                "type": "string",
-                "description": "Detailed answer if the page answers the question, otherwise empty."
-            },
-            "key_points": {
-                "type": "array",
-                "items": {"type": "string"},
-                "description": "List of bullet points or highlights from the page."
-            },
-            "context": {
-                "type": "string",
-                "description": "Additional context or disclaimers."
-            },
-            "output": {
-                "type": "string",
-                "description": "If action='final', the final text to display."
-            }
-        },
-        "required": ["action"]
-    }
-}
-
 class OpenAIPageExtractionLLM:
     """
-    A class that uses OpenAI's function calling to extract and analyze content from web pages.
-    
-    This class takes a language model instance and provides methods to analyze page content
-    and determine if it contains the answer to a given question.
+    A wrapper for OpenAI models that extracts information from web pages.
+    Uses function calls to structure the output in a consistent format.
     """
-
+    
     def __init__(self, llm: BaseLanguageModel):
         """
-        Initialize the extraction LLM.
+        Initialize the page extraction LLM.
         
         Args:
-            llm: A language model instance that supports function calling
+            llm: A language model instance
         """
         self.llm = llm
-
-    async def extract_with_function_call(self, page_content_markdown: str, question: str) -> Dict[str, Any]:
+    
+    async def extract_with_function_call(self, content: str, goal: str) -> Dict[str, Any]:
         """
-        Analyze page content to determine if it answers the given question.
+        Extract information from content using function calls to structure the output.
         
         Args:
-            page_content_markdown: The page content in markdown format
-            question: The question to check if the page answers
+            content: The page content (in markdown)
+            goal: The user's goal or query
             
         Returns:
-            Dict containing the analysis result with keys:
-            - action: Either 'final' or 'next_url'
-            - summary: Detailed answer if found
-            - key_points: List of important points
-            - context: Additional context
-            - output: Final formatted output
+            dict: The structured extraction result
         """
-        messages = [
-            SystemMessage(content=(
-                "You are a specialized page extraction assistant. "
-                "Analyze the provided page content to see if it answers the user's question. "
-                "If yes, call the function 'extract_content_result' with action='final', summary, key_points, context, and output. "
-                "If not, call the function 'extract_content_result' with action='next_url'. "
-                "Do not return anything else."
-            )),
-            HumanMessage(content=f"Question: {question}\nPage content:\n{page_content_markdown}")
-        ]
-
         try:
-            response = await self.llm.ainvoke(input=messages,functions=[extraction_function])
-
-            if isinstance(response, AIMessage) and hasattr(response, 'additional_kwargs'):
-                function_call = response.additional_kwargs.get('function_call')
-                if function_call:
-                    arguments_str = function_call.get("arguments", "{}")
+            # Use LangChain to invoke the model with function calling
+            messages = [
+                {"role": "system", "content": (
+                    "You are analyzing a web page to extract relevant information. "
+                    "Based on the content, determine whether it answers the user's question. "
+                    "If it does, create a summary and extract key points."
+                )},
+                {"role": "user", "content": (
+                    f"Question: {goal}\n\n"
+                    f"Page Content:\n{content[:10000]}"  # Truncate to avoid token limits
+                )}
+            ]
+            
+            # Define the function schema for structured output
+            functions = [
+                {
+                    "name": "extract_content",
+                    "description": "Extract relevant content from a webpage",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "action": {
+                                "type": "string",
+                                "enum": ["final", "next_url"],
+                                "description": "Whether this content answers the question (final) or not (next_url)"
+                            },
+                            "summary": {
+                                "type": "string",
+                                "description": "A brief summary of the content's relevance to the query"
+                            },
+                            "key_points": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "List of key points extracted from the content"
+                            },
+                            "context": {
+                                "type": "string",
+                                "description": "Additional context or notes about the content"
+                            },
+                            "output": {
+                                "type": "string",
+                                "description": "The final output answer if action is 'final'"
+                            }
+                        },
+                        "required": ["action", "summary", "key_points", "output"]
+                    }
+                }
+            ]
+            
+            # Convert to LangChain format
+            langchain_messages = []
+            for msg in messages:
+                if msg["role"] == "system":
+                    langchain_messages.append({"role": "system", "content": msg["content"]})
+                else:
+                    langchain_messages.append({"role": "user", "content": msg["content"]})
+            
+            response = await self.llm.ainvoke(
+                input=langchain_messages,
+                functions=functions,
+                function_call={"name": "extract_content"}
+            )
+            
+            # Parse the response
+            logger.info(f"Raw extraction response type: {type(response)}")
+            
+            # Try different approaches to extract the function call results
+            try:
+                # First method: Check if it's a direct dictionary response
+                if isinstance(response, dict) and "action" in response:
+                    logger.info("Found direct dictionary response")
+                    return response
+                
+                # Second method: OpenAI-style function call 
+                function_call = getattr(response, "function_call", None)
+                if function_call and hasattr(function_call, "arguments"):
+                    logger.info("Found OpenAI-style function call")
+                    arguments = function_call.arguments
+                    
+                    # Clean up potential markdown or formatting
+                    if isinstance(arguments, str):
+                        if arguments.startswith("```json"):
+                            arguments = arguments[7:]
+                        if arguments.endswith("```"):
+                            arguments = arguments[:-3]
+                        arguments = arguments.strip()
+                    
+                    extraction_result = json.loads(arguments)
+                    logger.info(f"Extraction result action: {extraction_result.get('action')}")
+                    return extraction_result
+                
+                # Third method: Look for a content attribute (common in some LangChain responses)
+                content = getattr(response, "content", None)
+                if content:
+                    logger.info("Found content attribute, attempting to parse")
+                    # Try to extract JSON from the content
+                    import re
+                    json_match = re.search(r'```json\s*(.*?)\s*```', content, re.DOTALL)
+                    if json_match:
+                        json_str = json_match.group(1)
+                        extraction_result = json.loads(json_str)
+                        logger.info(f"Extracted JSON from content: {extraction_result.get('action')}")
+                        return extraction_result
+                    
+                    # If we still can't find JSON, try one more approach
                     try:
-                        arguments = json.loads(arguments_str)
-                        logger.info(f"Function '{function_call['name']}' called with arguments: {arguments}")
-                        return arguments
-                    except json.JSONDecodeError as e:
-                        logger.error(f"Error parsing function call arguments: {e}")
-                        return self._get_fallback_response()
+                        # Maybe it's a direct JSON string without markdown formatting
+                        extraction_result = json.loads(content)
+                        if "action" in extraction_result:
+                            logger.info("Parsed direct JSON from content")
+                            return extraction_result
+                    except json.JSONDecodeError:
+                        pass
+                
+                # Fourth method: Look for .additional_kwargs.function_call
+                additional_kwargs = getattr(response, "additional_kwargs", {})
+                if additional_kwargs and "function_call" in additional_kwargs:
+                    logger.info("Found function_call in additional_kwargs")
+                    fc = additional_kwargs["function_call"]
+                    if isinstance(fc, dict) and "arguments" in fc:
+                        args = fc["arguments"]
+                        extraction_result = json.loads(args)
+                        logger.info(f"Extracted from additional_kwargs: {extraction_result.get('action')}")
+                        return extraction_result
+                
+                # Last resort: If the response itself is a string, try parsing it
+                if isinstance(response, str):
+                    logger.info("Response is a string, attempting to parse")
+                    # Try to find JSON in the string
+                    import re
+                    json_match = re.search(r'```json\s*(.*?)\s*```', response, re.DOTALL)
+                    if json_match:
+                        json_str = json_match.group(1)
+                        extraction_result = json.loads(json_str)
+                        return extraction_result
+                    
+                    # Maybe it's direct JSON without markdown
+                    try:
+                        extraction_result = json.loads(response)
+                        if "action" in extraction_result:
+                            return extraction_result
+                    except json.JSONDecodeError:
+                        pass
+                
+                # Log the full response for debugging
+                logger.error(f"Unable to parse response: {str(response)[:500]}...")
+                
+            except Exception as e:
+                logger.error(f"Error parsing extraction response: {e}")
             
-            logger.warning("Model did not call a function. Returning fallback.")
-            return self._get_fallback_response()
-            
+            # Fallback in case all parsing methods fail
+            logger.warning("Function call failed, using fallback parsing")
+            return {
+                "action": "next_url",
+                "summary": "",
+                "key_points": [],
+                "context": "",
+                "output": ""
+            }
+        
         except Exception as e:
-            logger.error(f"Error during content extraction: {e}")
-            return self._get_fallback_response()
-
-    def _get_fallback_response(self) -> Dict[str, Any]:
-        """Return a fallback response when extraction fails."""
-        return {
-            "action": "next_url",
-            "summary": "",
-            "key_points": [],
-            "context": "",
-            "output": ""
-        }
+            logger.error(f"Error in extract_with_function_call: {e}")
+            return {
+                "action": "next_url",
+                "summary": "",
+                "key_points": [],
+                "context": "",
+                "output": f"Error: {str(e)}"
+            }
