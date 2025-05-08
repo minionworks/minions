@@ -1,6 +1,6 @@
 import logging
 import json
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, Optional, List
 from langchain_core.language_models.base import BaseLanguageModel
 from langchain_core.messages import SystemMessage, HumanMessage
 
@@ -8,231 +8,126 @@ logger = logging.getLogger(__name__)
 
 class MCPPlanner:
     """
-    Model Context Protocol (MCP) Planner.
-    
-    This class implements the MCP for better context management and planning 
-    in the AI web scraper. It helps structure the context and maintain 
-    state across multiple LLM calls in the scraping process.
+    Model Context Protocol (MCP) Planner with LLM-guided page interactions.
     """
-    
     def __init__(self, llm: BaseLanguageModel):
-        """
-        Initialize the MCP Planner.
-        
-        Args:
-            llm: A language model instance that will be used for planning
-        """
         self.llm = llm
-        self.context = {
+        self.context: Dict[str, Any] = {
             "visited_urls": [],
             "extracted_content": [],
             "search_queries": [],
             "final_answers": []
         }
         self.state = "INITIAL"
-        self.max_visited_urls = 15  # Prevent infinite loops
-    
-    def update_context(self, key: str, value: Any) -> None:
-        """
-        Update the context with new information.
-        
-        Args:
-            key: The context key to update
-            value: The value to add to the context
-        """
-        if key in self.context:
-            if isinstance(self.context[key], list):
-                self.context[key].append(value)
-            else:
-                self.context[key] = value
-        else:
-            self.context[key] = value
-        
-        logger.debug(f"Updated context: {key} = {value}")
-    
+        self.max_visited_urls = 15
+
+    def add_search_query(self, query: str) -> None:
+        self.context["search_queries"].append(query)
+
     def add_visited_url(self, url: str) -> None:
-        """
-        Add a URL to the list of visited URLs.
-        
-        Args:
-            url: The URL that was visited
-        """
         if url not in self.context["visited_urls"]:
             self.context["visited_urls"].append(url)
-    
+
     def add_extracted_content(self, url: str, content: Dict[str, Any]) -> None:
-        """
-        Add extracted content to the context.
-        
-        Args:
-            url: The URL the content was extracted from
-            content: The extracted content
-        """
-        self.context["extracted_content"].append({
-            "url": url,
-            "content": content
-        })
-    
-    def add_search_query(self, query: str) -> None:
-        """
-        Add a search query to the context.
-        
-        Args:
-            query: The search query that was performed
-        """
-        self.context["search_queries"].append(query)
-    
+        self.context["extracted_content"].append({"url": url, "content": content})
+        logger.info(f"Added extracted content for {url}")
+
     def should_continue_scraping(self) -> bool:
-        """
-        Determine if scraping should continue based on the context.
-        
-        Returns:
-            bool: True if scraping should continue, False otherwise
-        """
-        # Check if we've reached a final answer
         if self.context["final_answers"]:
             return False
-        
-        # Check if we've visited too many URLs
         if len(self.context["visited_urls"]) >= self.max_visited_urls:
-            logger.warning(f"Reached maximum URLs ({self.max_visited_urls}), stopping")
+            logger.warning("Reached max visited URLs, stopping")
             return False
-        
         return True
-    
-    async def decide_next_action(self, user_goal: str, current_url: Optional[str] = None) -> Dict[str, Any]:
+
+    async def decide_next_action(
+        self,
+        user_goal: str,
+        current_url: Optional[str] = None,
+        page_elements: Optional[List[Dict[str, str]]] = None
+    ) -> Dict[str, Any]:
         """
-        Decide the next action based on the current context and user goal.
-        
-        Args:
-            user_goal: The user's goal for the scraping task
-            current_url: The URL currently being processed (if any)
-            
-        Returns:
-            dict: The next action to take
+        Decide the next action. When PAGE_INTERACTIONS is chosen, LLM returns
+        an `interactions` list of {selector,type,value}.
+        The planner receives a snapshot of `page_elements` to choose from.
         """
-        # Prepare context summary for the LLM
-        context_summary = {
-            "visited_urls_count": len(self.context["visited_urls"]),
-            "visited_urls": self.context["visited_urls"][-5:],  # Last 5 URLs
-            "extracted_content_count": len(self.context["extracted_content"]),
-            "search_queries": self.context["search_queries"],
+        # Build context summary
+        summary = {
+            "visited_urls": self.context.get("visited_urls", [])[-5:],
+            "search_queries": self.context.get("search_queries", []),
+            "search_results_available": len(self.context.get("search_results", [])),
+            "extracted_count": len(self.context.get("extracted_content", [])),
             "current_url": current_url,
-            "state": self.state
+            "state": self.state,
+            "extracted_content":self.context.get("extracted_content",[]),
+            "page_elements": page_elements or []
         }
-        
-        # Add search results information
         search_results = self.context.get("search_results", [])
         if search_results:
             # Only include first 3 results for brevity
-            search_results_summary = search_results[:3]
-            context_summary["search_results_available"] = len(search_results)
-            context_summary["search_results_sample"] = search_results_summary
+            search_results_summary = search_results
+            summary["search_results_available"] = len(search_results)
+            summary["search_results_sample"] = search_results_summary
+            # summary["current_extracted_content"] = 
             
             # Check if we're in a search loop
             search_count = len(self.context.get("search_queries", []))
             if search_count >= 3 and len(self.context.get("visited_urls", [])) == 0:
-                context_summary["search_loop_detected"] = True
+                summary["search_loop_detected"] = True
                 logger.warning("Search loop detected - recommend NAVIGATE action")
         else:
-            context_summary["search_results_available"] = 0
-        
+            summary["search_results_available"] = 0
+        logger.info(f"extracted content>>> : {summary.get('extracted_content',[])}")
+
+        # Prepare prompt
         messages = [
             SystemMessage(content=(
-                "You are a web scraping planner. Your job is to decide the next action to take "
-                "based on the current context and the user's goal. Consider what information "
-                "has been collected so far and what might still be needed.\n\n"
-                "Choose one of these actions:\n"
-                "1. SEARCH - Only use this when no search has been done yet or current search results aren't relevant\n"
-                "2. EXTRACT - Use when on a page that might have relevant information\n"
-                "3. NAVIGATE - Use when search results are available but not yet visited (IMPORTANT: prefer this over SEARCH if search_results_available > 0)\n"
-                "4. FINISH - Conclude the scraping with a final answer when enough information has been collected\n\n"
-                "IMPORTANT GUIDELINES:\n"
-                "- If search_results_available > 0, prefer NAVIGATE instead of more SEARCH actions\n"
-                "- If search_loop_detected is true, you MUST choose NAVIGATE to break out of the loop\n"
-                "- For NAVIGATE, don't include example.com URLs - use actual search results\n"
-                "- For SEARCH, only include a 'query' parameter with a specific search query\n"
-                "- Keep track of how many searches have been done - never do more than 3 searches before navigating\n\n"
-                "Respond with a JSON object containing 'action' and any additional parameters needed."
+                "You are a proactive web-scraping planner. Given the context summary below, choose exactly one action: SEARCH, NAVIGATE, EXTRACT, PAGE_INTERACTIONS, or FINISH."
+                f"Context Summary:```json {summary}```"
+                "Actions:"
+                "• SEARCH: Perform a new Google search when no search_results are available or previous results were exhausted. Return `{\"action\":\"SEARCH\",\"query\":\"...\"}`."
+                "• NAVIGATE: Visit the next unvisited search_result URL. Return `{\"action\":\"NAVIGATE\",\"url\":\"...\"}`."
+                "• EXTRACT: Extract content from the current page without interacting. Return `{\"action\":\"EXTRACT\"}`."
+                "• PAGE_INTERACTIONS: Interact with visible page_elements (filters, dropdowns, inputs, links) to reveal or refine content. Use when extract_count > 0 but content incomplete, or extract_count == 0 with available page_elements. Return `{\"action\":\"PAGE_INTERACTIONS\",\"interactions\":[...]}` with precise selectors and types."
+                "• FINISH: Stop when extracted_content contains at least one item marked final or with a clear non-empty output that answers the user goal. Return `{\"action\":\"FINISH\"}`."
+                "Guidelines:"
+                "1. After NAVIGATE, if no EXTRACT has occurred yet, choose EXTRACT."
+                "2. If EXTRACT has occurred (extracted_content count > 0) and the result lacks key points or isn’t final, and there are unused page_elements, choose PAGE_INTERACTIONS."
+                "3. Only use PAGE_INTERACTIONS when page_elements list is non-empty."
+                "4. Use SEARCH only if search_results_available == 0 or all NAVIGATE URLs have been visited."
+                "5. Use NAVIGATE if unvisited search_results exist and no EXTRACT or PAGE_INTERACTIONS is currently needed."
+                "6. Only FINISH when extracted_content includes at least one item with action \"final\" or a non-empty output answering the goal."
+                "7. Always respond with valid JSON containing only the keys: action, and query/url/interactions as required."
             )),
             HumanMessage(content=(
-                f"User Goal: {user_goal}\n\n"
-                f"Current Context: {json.dumps(context_summary, indent=2)}\n\n"
-                "What should be the next action? Respond with JSON only."
+                f"User Goal: {user_goal}"
+                "Which action and parameters?"
             ))
         ]
-        
+        # Invoke LLM
         response = await self.llm.ainvoke(input=messages)
-        logger.info(f"Raw response: {response.content}")
+        raw = response.content.strip()
+        if raw.startswith("```"):
+            raw = "".join(raw.splitlines()[1:-1])
         try:
-            # Clean up the response to handle markdown code blocks
-            content = response.content.strip()
-            if content.startswith("```json"):
-                content = content[7:]  # Remove ```json
-            if content.endswith("```"):
-                content = content[:-3]  # Remove trailing ```
-            
-            # Now attempt to parse the JSON
-            action_data = json.loads(content.strip())
-            logger.info(f"Next action: {action_data}")
-            return action_data
+            action_data = json.loads(raw)
         except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse LLM response as JSON: {e}")
-            # Smart fallback based on context state
-            if current_url:
-                # If we're on a page, extract content
-                return {"action": "EXTRACT"}
-            elif self.context.get("search_results") and len(self.context.get("search_results", [])) > 0:
-                # If search results are available but no navigation yet, navigate
-                return {"action": "NAVIGATE"}
-            elif len(self.context.get("visited_urls", [])) > 0 and len(self.context.get("extracted_content", [])) > 0:
-                # If we've visited some pages and extracted content, try to finish
-                return {"action": "FINISH"}
-            else:
-                # Default to initial search
-                return {"action": "SEARCH", "query": user_goal}
-    
+            logger.error(f"JSON parse error: {e}")
+            action_data = {"action": "EXTRACT"}
+        return action_data
+
     async def generate_final_answer(self, user_goal: str) -> str:
-        """
-        Generate a final answer based on all collected information.
-        
-        Args:
-            user_goal: The user's original goal
-            
-        Returns:
-            str: The final answer
-        """
-        # Get the most relevant extracted content
-        relevant_content = []
-        for item in self.context["extracted_content"]:
-            # Only include content that has useful information
-            content = item["content"]
-            if content.get("action") != "next_url" and content.get("summary"):
-                relevant_content.append({
-                    "url": item["url"],
-                    "summary": content.get("summary", ""),
-                    "key_points": content.get("key_points", [])
-                })
-        
+        relevant = [
+                {"url": it["url"], "summary": it["content"].get("output", "")}  
+                for it in self.context["extracted_content"] if it["content"].get("output")
+            ]
         messages = [
             SystemMessage(content=(
-                "You are an expert at synthesizing information from multiple sources. "
-                "Based on the information collected during web scraping, provide a "
-                "comprehensive answer to the user's original goal. Include citations "
-                "to the source URLs when appropriate."
-            )),
-            HumanMessage(content=(
-                f"User Goal: {user_goal}\n\n"
-                f"Information Collected:\n{json.dumps(relevant_content, indent=2)}\n\n"
-                "Please provide a comprehensive answer based on this information."
-            ))
+                "You are an expert synthesizer. Combine summaries into a final answer.")),
+            HumanMessage(content=f"Goal: {user_goal}\nData: {json.dumps(relevant, indent=2)}")
         ]
-        
-        response = await self.llm.ainvoke(input=messages)
-        final_answer = response.content.strip()
-        
-        # Save to context
-        self.context["final_answers"].append(final_answer)
+        resp = await self.llm.ainvoke(input=messages)
+        ans = resp.content.strip()
+        self.context["final_answers"].append(ans)
         self.state = "FINISHED"
-        
-        return final_answer
+        return ans

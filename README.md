@@ -1,4 +1,3 @@
-<!-- Light/Dark Mode Banner Hack -->
 <p align="center">
   <img src="static/minion-works-cover-light.png#gh-light-mode-only" alt="Minion Works" width="100%" />
   <img src="static/minion-works-cover-dark.png#gh-dark-mode-only" alt="Minion Works" width="100%" />
@@ -14,14 +13,15 @@
 
 ## 🚀 Overview
 
-Minion Works is a modular AI agent framework that connects to your browser and executes complex tasks autonomously. Built for developers, researchers, and curious builders.
+MinionWorks is a modular AI agent framework that connects to your browser and executes complex tasks autonomously. Built for developers, researchers, and curious builders.
 
 ### ✨ Features
-- 🌐 Perform Google searches and scrape content  
-- 🤖 Use LLMs (like GPT-4) to plan actions  
-- 🔗 Modular architecture for plug-and-play use cases  
-- 🔎 DOM interaction & content extraction  
-- 🔄 Run workflows via Python or UI  
+
+* 🌐 Perform Google searches and scrape content
+* 🤖 Use LLMs (like GPT-4) to plan actions
+* 🔗 Modular architecture for plug-and-play use cases
+* 🔎 DOM interaction & content extraction
+* 🔄 Run workflows via Python or UI
 
 ---
 
@@ -63,29 +63,81 @@ async def main():
     result1 = await agent1.run()
     print("Result 1:", result1)
 
-    # Example 2: Providing custom LLM and configuration
-    agent2 = MinionAgent(
-        task="Search for the latest news about AI",
-        llm=ChatOpenAI(model="gpt-4o"),
-        headless=False  # Show browser window
-    )
-    result2 = await agent2.run()
-    print("Result 2:", result2)
-
 if __name__ == "__main__":
     asyncio.run(main())
 ```
 
 ---
 
-## 🧠 Example Use Case
+## 💡 Example Use Cases
 
-```python
-agent = MinionAgent(
-    task="Find the top 3 ML conferences in 2025 and summarize each.",
-    llm=ChatOpenAI(model="gpt-4")
-)
-await agent.run()
+Invoke MinionAgent with any of these example prompts to see it in action:
+
+1. **List of Indian B2B YC Companies**
+
+   ```python
+   agent = MinionAgent(task="Give me the list of all B2B YC companies in India", llm=ChatOpenAI(model="gpt-4o"))
+   result = await agent.run()
+   print(result)
+   ```
+
+2. **Kerala CPI Index (Feb 2024)**
+
+   ```python
+   agent = MinionAgent(task="What is the CPI index of kerela for the month of february 2024", llm=ChatOpenAI(model="gpt-4o"))
+   result = await agent.run()
+   print(result)
+   ```
+
+3. **3-Day Ladakh Itinerary from Delhi**
+
+   ```python
+   agent = MinionAgent(task="Give me the itinerary for the three day plan for visiting Ladakh from Delhi", llm=ChatOpenAI(model="gpt-4o"))
+   result = await agent.run()
+   print(result)
+   ```
+
+---
+
+## 📂 Examples & Recordings
+
+Play back the recorded demos in the `examples/videos/` directory and see MinionAgent tackle each prompt below.
+
+### 1. Indian B2B YC Companies
+
+<video src="examples/videos/b2b_india.mp4" controls width="600" 
+/>
+
+**Prompt:**
+
+```
+Give me the list of all B2B YC companies in India
+```
+
+---
+
+### 2. Kerala CPI Index (Feb 2024)
+
+<video src="examples/videos/cpi_kerala.mp4" controls width="600" 
+/>
+
+**Prompt:**
+
+```
+What is the CPI index of kerela for the month of february 2024
+```
+
+---
+
+### 3. Ladakh Itinerary from Delhi
+
+<video src="examples/videos/itinerary.mp4" controls width="600" 
+/>
+
+**Prompt:**
+
+```
+Give me the itinerary for the three day plan for visiting Ladakh from Delhi
 ```
 
 ---
@@ -102,11 +154,12 @@ Ensure you’re in the root folder where `tests/` lives.
 
 ## 🤝 Contributing
 
-We welcome PRs, feedback, and creative ideas!  
-1. Fork → Branch → Commit  
-2. Add tests  
-3. Submit a Pull Request  
-4. Tell your friends 🚀  
+We welcome PRs, feedback, and creative ideas!
+
+1. Fork → Branch → Commit
+2. Add tests
+3. Submit a Pull Request
+4. Tell your friends 🚀
 
 ---
 
